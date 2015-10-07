@@ -2,4 +2,4 @@ python-KNN
 ===
 
 ####Introducion
-> python-KNN is an simple implementation in Python
+> python-KNN is a simple implementation in Python
