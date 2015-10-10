@@ -7,7 +7,7 @@ Created on Sat Oct 10 14:40:30 2015
 
 import math
 
-class Node(Object):
+class Node():
 	"""
 	A Node in a kd-tree. Also, an Binary tree node.
 	"""
@@ -103,19 +103,10 @@ class Node(Object):
 
 
 class KDNode(Node):
-	"""A Node that contains kd-tree specific data and methods. """
-	der __init__(self, data=None, left=None, right=None, axis=None,
-			sel_axis=None, dimensions=None):
-		"""
-		Creates a new node for a kd-tree
-
-        If the node will be used within a tree, the axis and the sel_axis
-        function should be supplied.
-
-        sel_axis(axis) is used when creating subnodes of the current node. It
-        receives the axis of the parent node and returns the axis of the child
-        node. 
-		"""
+	"""
+	A Node that contains kd-tree specific data and methods. 
+	"""
+	def __init__(self, data=None, left=None, right=None, axis=None,sel_axis=None, dimensions=None):
 		super(KDNode, self).__init__(data, left, right)
 		self.axis = axis
 		self.sel_axis = sel_axis
