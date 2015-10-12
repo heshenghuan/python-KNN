@@ -243,10 +243,14 @@ class KDNode(Node):
 
     @require_axis
     def find_replacement(self):
-        """ Finds a replacement for the current node
+        """ 
+        Finds a replacement for the current node.In kd-tree, the replacement 
+        node should be the most right node at left subtree, or the most left
+        node at right subtree.
 
         The replacement is returned as a
-        (replacement-node, replacements-parent-node) tuple """
+        (replacement-node, replacements-parent-node) tuple.
+        """
 
         if self.right:
             child, parent = self.right.extreme_child(min, self.axis)
@@ -256,10 +260,12 @@ class KDNode(Node):
         return (child, parent if parent is not None else self)
 
     def extreme_child(self, sel_func, axis):
-        """ Returns a child of the subtree and its parent
+        """
+        Returns a child of the subtree and its parent
 
         The child is selected by sel_func which is either min or max
-        (or a different function with similar semantics). """
+        (or a different function with similar semantics). 
+        """
 
         max_key = lambda child_parent: child_parent[0].data[axis]
 
@@ -304,3 +310,18 @@ class KDNode(Node):
         else:
             root.remove(point, self)
         return root
+
+    def axis_dist(self, point, axis):
+    	"""
+    	Returns the squared distance at the given axis between the current
+    	Node and the given point.
+    	"""
+    	return math.pow(self.data[axis] - point[axis],2)
+
+    def dist(self, point):
+    	"""
+    	Returns the squared distance between the current Node and the given
+    	point.
+    	"""
+    	r = range(len(self.data))
+    	return sum([self.axis_dist(point, i) for i in r])
