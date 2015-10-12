@@ -286,5 +286,4 @@ class KDNode(Node):
             max_p.remove(point, self)
         else:
             root.remove(point, self)
-
         return root
