@@ -106,6 +106,25 @@ class Node:
 			if child == c:
 				return p
 
+	def __repr__(self):
+        return '<%(cls)s - %(data)s>' % \
+            dict(cls=self.__class__.__name__, data=repr(self.data))
+
+
+    def __nonzero__(self):
+        return self.data is not None
+
+    __bool__ = __nonzero__
+
+    def __eq__(self, other):
+        if isinstance(other, tuple):
+            return self.data == other
+        else:
+            return self.data == other.data
+
+    def __hash__(self):
+        return id(self)
+
 
 def require_axis(f):
     """ Check if the object of the function has axis and sel_axis members """
