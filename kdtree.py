@@ -93,9 +93,7 @@ class Node:
 		self.parent = parent
 
 	def height(self):
-		"""
-		Returns height of the (sub)tree.
-		"""
+		"""Returns height of the (sub)tree."""
 		min_height = int(bool(self))
 		return max([min_height]+[c.height()+1 for c, p in self.children])
 
