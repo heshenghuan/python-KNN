@@ -1,4 +1,4 @@
-    # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Created on Sat Oct 10 14:40:30 2015
 
@@ -11,124 +11,13 @@ import operator
 from functools import wraps
 from collections import deque
 
-class Node:
-    """
-    A Node in a kd-tree. Also, an Binary tree node.
-    """
-    def  __init__(self, data=None, parent=None, left=None, right=None):
-        self.parent = parent
-        self.data = data
-        self.left = left
-        self.right = right
-
-    def is_leaf(self):
-        """
-        Returns True if a Node has no subnodes
-        """
-        return (not self.data) or (all(not bool(c) for c, p in self.children))
-
-    def preorder(self):
-        """Iterator for nodes: root, left, right. """
-        if not self:
-            return
-        # preorder
-        yield self
-        if self.left:
-            for x in self.left.preorder():
-                yield x
-        if self.right:
-            for x in self.right.preorder():
-                yield x
-
-    def inorder(self):
-        """Iterator for nodes: left, root, right. """
-        if not self:
-            return
-
-        #inorder
-        if self.left:
-            for x in self.left.inorder():
-                yield x
-        yield self
-        if self.right:
-            for x in self.right.inorder():
-                yield x
-
-
-    def postorder(self):
-        """Iterator for nodes: left, right, root. """
-        if not self:
-            return
-        #postorder
-        if self.left:
-            for x in self.left.postorder():
-                yield x
-        if self.right:
-            for x in self.right.postorder():
-                yield x
-        yield self
-
-    def children(self):
-        """
-        Returns an iterator for the children of the Node.
-
-        The children are returnd as (Node, pos) tuples where pos is 0 for the
-        left subnode and 1 for the right subnode.
-        """
-        if self.left and self.left.data is not None:
-            yield self.left, 0
-        if self.right and self.right.data is not None:
-            yield self.right, 1
-
-    def set_child(self, index, child):
-        """
-        Sets one of the node's children, index 0 refers to the left, 1 to the 
-        right.
-        """
-        if index == 0:
-            self.left = child
-        else:
-            self.right = child
-
-    def set_parent(self, parent=None):
-        """
-        Sets the parent node of node.
-        """
-        self.parent = parent
-
-    def height(self):
-        """Returns height of the (sub)tree."""
-        # If self is not None, it's height should be at least 1
-        min_height = int(bool(self))
-        return max([min_height]+[c.height()+1 for c, p in self.children()])
-
-    def get_child_pos(self, child):
-        """
-        Returns the position of the given child.
-        
-        If the given child is the left child, returns 0. The right child, 1 is returned.
-        Otherwise None.
-        """
-        for c,p in self.children:
-            if child == c:
-                return p
-    
-    def __nonzero__(self):
-        return self.data is not None
-    
-    def __repr__(self):
-        return "<%(cls)s - %(data)s>"%dict(cls=self.__class__.__name__, data=repr(self.data))    
-
-    __bool__ = __nonzero__
-
-    def __eq__(self, other):
-        if isinstance(other, tuple):
-            return self.data == other
-        else:
-            return self.data == other.data
-    def __hash__(self):
-        return id(self)
-
+# maps child position to its comparison operator
+# 0: search left child, means searching in decreasing direction
+# 1: search right child, means searching in increasing direction
+COMPARE_CHILD = {
+    0: (operator.le, operator.sub),
+    1: (operator.ge, operator.add),
+}
 
 def require_axis(f):
     """ Check if the object of the function has axis and sel_axis members """
@@ -143,7 +32,7 @@ def require_axis(f):
 
     return _wrapper
 
-class KDNode(Node):
+class KDNode:
     """
     A Node that contains kd-tree specific data and methods. 
     """
@@ -161,10 +50,67 @@ class KDNode(Node):
         receives the axis of the parent node and returns the axis of the child
         node.
         """
-        Node.__init__(self, data, parent, left, right)
+        # Node.__init__(self, data, parent, left, right)
+        self.data = data
+        self.parent = parent
+        self.left = left
+        self.right = right
         self.axis = axis
         self.sel_axis = sel_axis
         self.dimensions = dimensions
+
+    def is_leaf(self):
+        """
+        Returns True if a Node has no subnodes.
+
+        Note that if Node has no data, returns True.
+        """
+        return (not self.data) or (all(not bool(c) for c, p in self.children))
+
+    def children(self):
+        """
+        Returns an iterator for the children of the Node.
+
+        The children are returnd as (Node, pos) tuples where pos is 0 for the
+        left subnode and 1 for the right subnode.
+        """
+        if self.left and self.left.data is not None:
+            yield self.left, 0
+        if self.right and self.right.data is not None:
+            yield self.right, 1
+
+    # def set_child(self, index, child):
+    #     """
+    #     Sets one of the node's children, index 0 refers to the left, 1 to the 
+    #     right.
+    #     """
+    #     if index == 0:
+    #         self.left = child
+    #     else:
+    #         self.right = child
+
+    # def set_parent(self, parent=None):
+    #     """
+    #     Sets the parent node of node.
+    #     """
+    #     self.parent = parent
+
+    def height(self):
+        """Returns height of the (sub)tree."""
+        # If self is not None, it's height should be at least 1
+        min_height = int(bool(self))
+        return max([min_height]+[c.height()+1 for c, p in self.children()])
+
+    def get_child_pos(self, child):
+        """
+        Returns the position of the given child.
+        
+        If the given child is the left child, returns 0. The right child, 1 is returned.
+        Otherwise None.
+        """
+        for c,p in self.children:
+            if child == c:
+                return p
 
     @require_axis
     def add(self, point):
@@ -174,7 +120,7 @@ class KDNode(Node):
         """
         current = self
         while True:
-            check_dimension([point], dimensions=current.dimensions)
+            check_dimensionality([point], dimensions=current.dimensions)
 
             # Adding has hit an empty leaf-node, add here
             if current.data is None:
@@ -347,25 +293,135 @@ class KDNode(Node):
             bestDist = float('inf')
         else:
             # find the nearest (node, distance) tuple
-            bestNode, bestDist = sorted(results.items(), key=lambda n_d: n_d[1], reverse=True)[0]
+            bestNode, bestDist = sorted(results.items(), key=lambda n_d: n_d[1], reverse=False)[0]
 
         nodesChanged = False
 
         # If the current node is closer than the current best, then it becomes
-        # the current best
+        # the current best. And the maximum distance nodes should be removed.
         nodeDist = get_dist(self)
         if nodeDist < bestDist:
             if len(results) == k and bestNode:
-                results.pop(bestNode)
+                # results.pop(bestNode)
+                # here is the difference, i remove the max dist node
+                maxNode, maxDist = sorted(results.items(), key=lambda n: n[1], reverse=True)[0]
+                results.pop(maxNode)
 
             results[self] = nodeDist
             nodesChanged = True
-        """
-        unfinished here
-        """
+        # If we're equal to the current best, add it, regardless of k
+        elif nodeDist == bestDist:
+            results[self] = nodeDist
+            nodesChanged = True
+        # If we don't have k results yet, add it anyway
+        elif len(results) < k:
+            results[self] = nodeDist
+            nodesChanged = True
 
-def create(point_list=None, dimensions=None, axis=0, sel_axis=None):
-    """ Creates a kd-tree from a list of points
+        # Get new best only if nodes have changed
+        if nodesChanged:
+            bestNode, bestDist = sorted(results.items(), key=lambda n: n[1], reverse=False)[0]
+
+        # Check whether there could be any points on the other side of the splitting
+        # hyperplane that are closer to the search point than the current best.
+        for child, pos in self.children():
+            if child in examined:
+                continue
+
+            examined.add(child)
+            compare, combine = COMPARE_CHILD[pos]
+
+            # Since the hyperplanes are all axis-aligned this is implemented
+            # as a simple comparison to see whether the difference between the
+            # splitting coordinate of the search point and current node is less
+            # than the distance (overall coordinates) from the search point to
+            # the current best.
+            nodePoint = self.data[self.axis]
+            pointPlusDist = combine(point[self.axis], bestDist)
+            lineIntersects = compare(pointPlusDist, nodePoint)
+
+            # If the hypersphere crosses the plane, there could be nearer
+            # points on the other side of the plane, so the algorithm must move
+            # down the other branch of the tree from the current node looking
+            # for closer points, following the same recursive process as the
+            # entire search.
+            if lineIntersects:
+                child._search_node(point, k, results, examined, get_dist)
+
+    def search_knn(self, point, k, dist=None):
+        """
+        Returns the k nearest neighbors of the given point and their distance.
+
+        point must be an actual point in same dimensions, not a node.
+
+        k is the number of results to return. The actual results can be less 
+        (if there aren't more nodes to return) or more in case of equal 
+        distance.
+
+        dist is a distance function, expecting two points and returning a
+        distance value. Distance values can be any compareable type.
+
+        The result is an ordered list of (node,distance) tuples.
+        """
+        prev = None
+        current = self
+
+        if dist is None:
+            get_dist = lambda n: n.dist(point)
+        else:
+            get_dist = lambda n: dist(n.data, point)
+
+        # go down the trees as we would for inserting
+        while current:
+            if point[current.axis] < current.data[current.axis]:
+                # go to left subtree
+                prev = current
+                current = current.left
+                #print("l,current:",current)
+            else:
+                # go to right subtree
+                prev = current
+                current = current.right
+                #print("r,current:",current)
+
+        if not prev:
+            return []
+        # print("prev:",prev)
+
+        examined = set()
+        results = {}
+
+        # Go uo the tree, looking for better solutions
+        current = prev
+        while current:
+            print(results)
+            current._search_node(point, k, results, examined, get_dist)
+            current = current.parent
+
+        return sorted(results.items(), key=lambda a:a[1])
+
+    def __nonzero__(self):
+        return self.data is not None
+    
+    def __repr__(self):
+        return "<%(cls)s - %(data)s>"%dict(cls=self.__class__.__name__, data=repr(self.data))    
+
+    __bool__ = __nonzero__
+
+    def __eq__(self, other):
+        if isinstance(other, tuple):
+            return self.data == other
+        else:
+            return self.data == other.data
+    def __hash__(self):
+        return id(self)
+
+
+
+
+def create(point_list=None, dimensions=None, axis=0, sel_axis=None,parent=None):
+    """ 
+    Creates a kd-tree from a list of points
 
     All points in the list must be of the same dimensionality.
 
@@ -377,7 +433,9 @@ def create(point_list=None, dimensions=None, axis=0, sel_axis=None):
     Axis is the axis on which the root-node should split.
 
     sel_axis(axis) is used when creating subnodes of a node. It receives the
-    axis of the parent node and returns the axis of the child node. """
+    axis of the parent node and returns the axis of the child node.
+
+    parent is the Nodes' parent node. """
 
     if not point_list and not dimensions:
         raise ValueError('either point_list or dimensions must be provided')
@@ -393,12 +451,15 @@ def create(point_list=None, dimensions=None, axis=0, sel_axis=None):
 
     # Sort point list and choose median as pivot element
     point_list.sort(key=lambda point: point[axis])
-    median = len(point_list) // 2
+    # print(point_list)
+    median = len(point_list) / 2 
 
     loc   = point_list[median]
-    left  = create(point_list[:median], dimensions, sel_axis(axis))
-    right = create(point_list[median + 1:], dimensions, sel_axis(axis))
-    return KDNode(loc, left, right, axis=axis, sel_axis=sel_axis)
+    root = KDNode(loc, parent,left=None, right=None, axis=axis, sel_axis=sel_axis)
+    root.left  = create(point_list[:median], dimensions, sel_axis(axis),parent=root)
+    root.right = create(point_list[median + 1:], dimensions, sel_axis(axis),parent=root)
+    #return KDNode(loc, parent=None,left=left, right=right, axis=axis, sel_axis=sel_axis)
+    return root
 
 
 def check_dimensionality(point_list, dimensions=None):
@@ -466,9 +527,13 @@ def visualize(tree, max_level=100, node_width=10, left_padding=5):
     print()
     print()
 
-if __name__ == "__main__":
-    point1 = [(2,3,4),(4,5,6),(5,3,2),(10,2,1)]
-    root = create(point1,dimensions=3,)
-    print(root)
-    print(root.right)
-    visualize(root)
+# if __name__ == "__main__":
+#     point1 = [(2,3),(5,4),(9,6),(4,7),(8,1),(7,2)]
+#     root = create(point1,dimensions=2)
+#     #print(root)
+#     print("point list")
+#     print(point1)
+#     print("visualize the kd-tree: ")
+#     visualize(root)
+#     ans = root.search_knn(point=(7,3),k=2,dist=None)
+#     print (ans)
