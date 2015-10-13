@@ -50,7 +50,6 @@ class KDNode:
         receives the axis of the parent node and returns the axis of the child
         node.
         """
-        # Node.__init__(self, data, parent, left, right)
         self.data = data
         self.parent = parent
         self.left = left
@@ -377,16 +376,13 @@ class KDNode:
                 # go to left subtree
                 prev = current
                 current = current.left
-                #print("l,current:",current)
             else:
                 # go to right subtree
                 prev = current
                 current = current.right
-                #print("r,current:",current)
 
         if not prev:
             return []
-        # print("prev:",prev)
 
         examined = set()
         results = {}
@@ -394,7 +390,6 @@ class KDNode:
         # Go uo the tree, looking for better solutions
         current = prev
         while current:
-            print(results)
             current._search_node(point, k, results, examined, get_dist)
             current = current.parent
 
@@ -451,14 +446,12 @@ def create(point_list=None, dimensions=None, axis=0, sel_axis=None,parent=None):
 
     # Sort point list and choose median as pivot element
     point_list.sort(key=lambda point: point[axis])
-    # print(point_list)
     median = len(point_list) / 2 
 
     loc   = point_list[median]
     root = KDNode(loc, parent,left=None, right=None, axis=axis, sel_axis=sel_axis)
     root.left  = create(point_list[:median], dimensions, sel_axis(axis),parent=root)
     root.right = create(point_list[median + 1:], dimensions, sel_axis(axis),parent=root)
-    #return KDNode(loc, parent=None,left=left, right=right, axis=axis, sel_axis=sel_axis)
     return root
 
 
@@ -526,14 +519,3 @@ def visualize(tree, max_level=100, node_width=10, left_padding=5):
 
     print()
     print()
-
-# if __name__ == "__main__":
-#     point1 = [(2,3),(5,4),(9,6),(4,7),(8,1),(7,2)]
-#     root = create(point1,dimensions=2)
-#     #print(root)
-#     print("point list")
-#     print(point1)
-#     print("visualize the kd-tree: ")
-#     visualize(root)
-#     ans = root.search_knn(point=(7,3),k=2,dist=None)
-#     print (ans)
