@@ -41,5 +41,5 @@ python-KNN
     
     >>> ans = root.search_knn(point=(7,3),k=3,dist=None)
     >>> print (ans)
-    (<KDNode - (7, 2)>, 1.0), (<KDNode - (8, 1)>, 5.0), (<KDNode - (9, 6)>, 13.0)]
+    [(<KDNode - (7, 2)>, 1.0), (<KDNode - (8, 1)>, 5.0), (<KDNode - (9, 6)>, 13.0)]
     
