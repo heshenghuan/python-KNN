@@ -95,7 +95,7 @@ class KNN:
         If you want to change the method of distance calculation, for example,
         you can set: 
         
-        dist = lambda a, b: sum( math.abs(a[axis]-b[axis]) for axis in range(len(a))) 
+        dist = lambda a, b: sum(abs(a[axis]-b[axis]) for axis in range(len(a))) 
 
         for calculating Manhattan distance.
         """
