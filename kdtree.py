@@ -19,25 +19,28 @@ COMPARE_CHILD = {
     1: (operator.ge, operator.add),
 }
 
+
 def require_axis(f):
     """ Check if the object of the function has axis and sel_axis members """
     @wraps(f)
     def _wrapper(self, *args, **kwargs):
         if None in (self.axis, self.sel_axis):
             raise ValueError('%(func_name) requires the node %(node)s '
-                    'to have an axis and a sel_axis function' %
-                    dict(func_name=f.__name__, node=repr(self)))
+                             'to have an axis and a sel_axis function' %
+                             dict(func_name=f.__name__, node=repr(self)))
 
         return f(self, *args, **kwargs)
 
     return _wrapper
 
+
 class KDNode:
     """
-    A Node that contains kd-tree specific data and methods. 
+    A Node that contains kd-tree specific data and methods.
     """
-    def __init__(self, data=None, parent=None, left=None, right=None, axis=None, 
-            sel_axis=None, dimensions=None):
+
+    def __init__(self, data=None, parent=None, left=None, right=None,
+                 axis=None, sel_axis=None, dimensions=None):
         """
         Creates a new node for a kd-tree.
 
@@ -80,7 +83,7 @@ class KDNode:
 
     # def set_child(self, index, child):
     #     """
-    #     Sets one of the node's children, index 0 refers to the left, 1 to the 
+    #     Sets one of the node's children, index 0 refers to the left, 1 to the
     #     right.
     #     """
     #     if index == 0:
@@ -98,16 +101,16 @@ class KDNode:
         """Returns height of the (sub)tree."""
         # If self is not None, it's height should be at least 1
         min_height = int(bool(self))
-        return max([min_height]+[c.height()+1 for c, p in self.children()])
+        return max([min_height] + [c.height() + 1 for c, p in self.children()])
 
     def get_child_pos(self, child):
         """
         Returns the position of the given child.
-        
-        If the given child is the left child, returns 0. The right child, 1 is returned.
-        Otherwise None.
+
+        If the given child is the left child, returns 0. The right child, 1 is
+        returned. Otherwise returned None.
         """
-        for c,p in self.children:
+        for c, p in self.children:
             if child == c:
                 return p
 
@@ -142,18 +145,18 @@ class KDNode:
 
     @require_axis
     def create_subnode(self, data):
-        return self.__class__(data,parent=self,
-                axis=self.sel_axis(self.axis),
-                sel_axis=self.sel_axis,
-                dimensions=self.dimensions)
+        return self.__class__(data, parent=self,
+                              axis=self.sel_axis(self.axis),
+                              sel_axis=self.sel_axis,
+                              dimensions=self.dimensions)
 
     def should_remove(self, point, node):
         """ checks if self's point (and maybe identity) matches """
         if not self.data == point:
             return False
-        
+
         return (node is None) or (node is self)
-    
+
     @require_axis
     def remove(self, point, node=None):
         """
@@ -190,8 +193,8 @@ class KDNode:
 
     @require_axis
     def find_replacement(self):
-        """ 
-        Finds a replacement for the current node.In kd-tree, the replacement 
+        """
+        Finds a replacement for the current node.In kd-tree, the replacement
         node should be the most right node at left subtree, or the most left
         node at right subtree.
 
@@ -211,7 +214,7 @@ class KDNode:
         Returns a child of the subtree and its parent
 
         The child is selected by sel_func which is either min or max
-        (or a different function with similar semantics). 
+        (or a different function with similar semantics).
         """
 
         max_key = lambda child_parent: child_parent[0].data[axis]
@@ -223,7 +226,7 @@ class KDNode:
         # insert self for unknown parents
         child_max = [(c, p if p is not None else self) for c, p in child_max]
 
-        candidates =  me + child_max
+        candidates = me + child_max
 
         if not candidates:
             return None, None
@@ -244,7 +247,8 @@ class KDNode:
         # self and root swap positions
         tmp_l, tmp_r = self.left, self.right
         self.left, self.right = root.left, root.right
-        root.left, root.right = tmp_l if tmp_l is not root else self, tmp_r if tmp_r is not root else self
+        root.left = tmp_l if tmp_l is not root else self
+        root.right = tmp_r if tmp_r is not root else self
 
         self.axis, root.axis = root.axis, self.axis
 
@@ -262,7 +266,7 @@ class KDNode:
         Returns the squared distance at the given axis between the current
         Node and the given point.
         """
-        return math.pow(self.data[axis] - point[axis],2)
+        return math.pow(self.data[axis] - point[axis], 2)
 
     def dist(self, point):
         """
@@ -276,7 +280,8 @@ class KDNode:
         """
         k is the number of nearest neighbors of point.
 
-        results is an ordered dict, while the key-value pair is (node, distance).
+        results is an ordered dict, while the key-value pair is
+        (node, distance).
 
         examined is a set.
 
@@ -292,7 +297,8 @@ class KDNode:
             bestDist = float('inf')
         else:
             # find the nearest (node, distance) tuple
-            bestNode, bestDist = sorted(results.items(), key=lambda n_d: n_d[1], reverse=False)[0]
+            bestNode, bestDist = sorted(
+                results.items(), key=lambda n_d: n_d[1], reverse=False)[0]
 
         nodesChanged = False
 
@@ -303,7 +309,8 @@ class KDNode:
             if len(results) == k and bestNode:
                 # results.pop(bestNode)
                 # here is the difference, i remove the max dist node
-                maxNode, maxDist = sorted(results.items(), key=lambda n: n[1], reverse=True)[0]
+                maxNode, maxDist = sorted(
+                    results.items(), key=lambda n: n[1], reverse=True)[0]
                 results.pop(maxNode)
 
             results[self] = nodeDist
@@ -319,9 +326,11 @@ class KDNode:
 
         # Get new best only if nodes have changed
         if nodesChanged:
-            bestNode, bestDist = sorted(results.items(), key=lambda n: n[1], reverse=False)[0]
+            bestNode, bestDist = sorted(
+                results.items(), key=lambda n: n[1], reverse=False)[0]
 
-        # Check whether there could be any points on the other side of the splitting
+        # Check whether there could be any other points on the other side
+        # of the splitting.
         # hyperplane that are closer to the search point than the current best.
         for child, pos in self.children():
             if child in examined:
@@ -353,8 +362,8 @@ class KDNode:
 
         point must be an actual point in same dimensions, not a node.
 
-        k is the number of results to return. The actual results can be less 
-        (if there aren't more nodes to return) or more in case of equal 
+        k is the number of results to return. The actual results can be less
+        (if there aren't more nodes to return) or more in case of equal
         distance.
 
         dist is a distance function, expecting two points and returning a
@@ -393,13 +402,14 @@ class KDNode:
             current._search_node(point, k, results, examined, get_dist)
             current = current.parent
 
-        return sorted(results.items(), key=lambda a:a[1])
+        return sorted(results.items(), key=lambda a: a[1])
 
     def __nonzero__(self):
         return self.data is not None
-    
+
     def __repr__(self):
-        return "<%(cls)s - %(data)s>"%dict(cls=self.__class__.__name__, data=repr(self.data))    
+        return "<%(cls)s - %(data)s>" % dict(cls=self.__class__.__name__,
+                                             data=repr(self.data))
 
     __bool__ = __nonzero__
 
@@ -408,14 +418,14 @@ class KDNode:
             return self.data == other
         else:
             return self.data == other.data
+
     def __hash__(self):
         return id(self)
 
 
-
-
-def create(point_list=None, dimensions=None, axis=0, sel_axis=None,parent=None):
-    """ 
+def create(point_list=None, dimensions=None, axis=0, sel_axis=None,
+           parent=None):
+    """
     Creates a kd-tree from a list of points
 
     All points in the list must be of the same dimensionality.
@@ -439,19 +449,22 @@ def create(point_list=None, dimensions=None, axis=0, sel_axis=None,parent=None):
         dimensions = check_dimensionality(point_list, dimensions)
 
     # by default cycle through the axis
-    sel_axis = sel_axis or (lambda prev_axis: (prev_axis+1) % dimensions)
+    sel_axis = sel_axis or (lambda prev_axis: (prev_axis + 1) % dimensions)
 
     if not point_list:
         return KDNode(sel_axis=sel_axis, axis=axis, dimensions=dimensions)
 
     # Sort point list and choose median as pivot element
     point_list.sort(key=lambda point: point[axis])
-    median = len(point_list) / 2 
+    median = len(point_list) / 2
 
-    loc   = point_list[median]
-    root = KDNode(loc, parent,left=None, right=None, axis=axis, sel_axis=sel_axis)
-    root.left  = create(point_list[:median], dimensions, sel_axis(axis),parent=root)
-    root.right = create(point_list[median + 1:], dimensions, sel_axis(axis),parent=root)
+    loc = point_list[median]
+    root = KDNode(loc, parent, left=None, right=None,
+                  axis=axis, sel_axis=sel_axis)
+    root.left = create(point_list[:median],
+                       dimensions, sel_axis(axis), parent=root)
+    root.right = create(point_list[median + 1:],
+                        dimensions, sel_axis(axis), parent=root)
     return root
 
 
@@ -459,10 +472,10 @@ def check_dimensionality(point_list, dimensions=None):
     dimensions = dimensions or len(point_list[0])
     for p in point_list:
         if len(p) != dimensions:
-            raise ValueError('All Points in the point_list must have the same dimensionality')
+            raise ValueError(
+                'All Points in point_list must have the same dimensionality')
 
     return dimensions
-
 
 
 def level_order(tree, include_all=False):
@@ -484,35 +497,34 @@ def level_order(tree, include_all=False):
             q.append(node.right or node.__class__())
 
 
-
 def visualize(tree, max_level=100, node_width=10, left_padding=5):
     """ Prints the tree to stdout """
 
-    height = min(max_level, tree.height()-1)
+    height = min(max_level, tree.height() - 1)
     max_width = pow(2, height)
 
     per_level = 1
-    in_level  = 0
-    level     = 0
+    in_level = 0
+    level = 0
 
     for node in level_order(tree, include_all=True):
 
         if in_level == 0:
             print()
             print()
-            print(' '*left_padding, end=' ')
+            print(' ' * left_padding, end=' ')
 
-        width = int(max_width*node_width/per_level)
+        width = int(max_width * node_width / per_level)
 
         node_str = (str(node.data) if node else '').center(width)
-        print(node_str, end=' ') 
+        print(node_str, end=' ')
 
         in_level += 1
 
         if in_level == per_level:
-            in_level   = 0
+            in_level = 0
             per_level *= 2
-            level     += 1
+            level += 1
 
         if level > height:
             break
