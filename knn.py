@@ -6,6 +6,9 @@ Created on Wed Oct 07 23:45:21 2015
 """
 
 import kdtree
+import dill
+from pickle import dump
+from pickle import load
 
 
 class KNN:
@@ -83,7 +86,7 @@ class KNN:
                 prb[label] = prb[label] / n
             return sorted(prb.items(), key=lambda n: n[1], reverse=True)
 
-    def classify(self, point=None, k=1, dist=None):
+    def classify(self, point=None, k=1, dist=None, prbout=0):
         """
         Classify the point.
 
@@ -104,6 +107,9 @@ class KNN:
         dist = lambda a, b: sum(abs(a[axis]-b[axis]) for axis in range(len(a)))
 
         for calculating Manhattan distance.
+
+        prbout: 0 just return the class.
+                1 return a vec of probability of each class.
         """
         if not point:
             return []
@@ -111,13 +117,30 @@ class KNN:
         neighbors = self.kdtree.search_knn(point, k, dist)
         prb = self.decision(neighbors)
         # print prb
-        return prb[0][0]
+        if prbout == 0:
+            return prb[0][0]
+        elif prbout == 1:
+            return prb
 
     def visualize_kdtree(self):
         """
         Visualize the kdtree.
         """
         kdtree.visualize(self.kdtree)
+
+
+def saveknn(knn_model, outfile):
+    out = open(outfile, 'w')
+    # Pickle the knn_model using the highest protocol available.
+    dump(knn_model, out, -1)
+    out.close()
+
+
+def loadknn(srcfile):
+    src = open(srcfile, 'r')
+    knn_model = load(src)
+    src.close()
+    return knn_model
 
 if __name__ == "__main__":
     data = [((3, 5), 1), ((2, 3), 1), ((5, 4), 1), ((9, 6), 0),
@@ -133,4 +156,20 @@ if __name__ == "__main__":
     print "the label of point", (9, 9), "is",
     print m.classify(point=(9, 9), k=3, dist=None)
     print "the label of point", (2, 8), "is",
-    print m.classify(point=(2, 8), k=3, dist=f)
+    print m.classify(point=(2, 8), k=3, dist=f, prbout=1)
+    saveknn(m, 'testknn.pkl')
+
+    # Pickle test
+    print "\n\nLoad knn model from file:"
+    n = loadknn('testknn.pkl')
+    print "Samples:", n.train_data
+    print "\nLabel prb:", n.class_prb
+    # print n.decision()
+    print "\n\nvisualize the kd-tree: "
+    n.visualize_kdtree()
+    f = lambda a, b: sum(abs(a[axis] - b[axis])
+                         for axis in range(len(a)))  # Manhattan distance
+    print "the label of point", (9, 9), "is",
+    print n.classify(point=(9, 9), k=3, dist=None)
+    print "the label of point", (6, 2), "is",
+    print n.classify(point=(6, 2), k=3, dist=f, prbout=1)
