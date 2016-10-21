@@ -141,35 +141,3 @@ def loadknn(srcfile):
     knn_model = load(src)
     src.close()
     return knn_model
-
-if __name__ == "__main__":
-    data = [((3, 5), 1), ((2, 3), 1), ((5, 4), 1), ((9, 6), 0),
-            ((4, 7), 1), ((8, 1), 0), ((7, 2), 1), ((8, 8), 0)]
-    m = KNN(data, dimensions=2)
-    print "Samples:", m.train_data
-    print "\nLabel prb:", m.class_prb
-    # print m.decision()
-    print "\n\nvisualize the kd-tree: "
-    m.visualize_kdtree()
-    f = lambda a, b: sum(abs(a[axis] - b[axis])
-                         for axis in range(len(a)))  # Manhattan distance
-    print "the label of point", (9, 9), "is",
-    print m.classify(point=(9, 9), k=3, dist=None)
-    print "the label of point", (2, 8), "is",
-    print m.classify(point=(2, 8), k=3, dist=f, prbout=1)
-    saveknn(m, 'testknn.pkl')
-
-    # Pickle test
-    print "\n\nLoad knn model from file:"
-    n = loadknn('testknn.pkl')
-    print "Samples:", n.train_data
-    print "\nLabel prb:", n.class_prb
-    # print n.decision()
-    print "\n\nvisualize the kd-tree: "
-    n.visualize_kdtree()
-    f = lambda a, b: sum(abs(a[axis] - b[axis])
-                         for axis in range(len(a)))  # Manhattan distance
-    print "the label of point", (9, 9), "is",
-    print n.classify(point=(9, 9), k=3, dist=None)
-    print "the label of point", (6, 2), "is",
-    print n.classify(point=(6, 2), k=3, dist=f, prbout=1)
