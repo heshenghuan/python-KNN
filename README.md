@@ -1,19 +1,26 @@
+
 python-KNN
 ===
 
-####Introducion
+##Introducion
 > python-KNN is a simple implementation of K nearest
 > neighbors algorithm in Python.
 >
 > Algorithm used kd-tree as basic data structure.
 
+## Usage of python-KNN
+
+Download the latest python-KNN source code, unzip it. Or you can just clone this repo to your own PC.
+
+Import this module `from python-KNN import *` (make sure the path of `python-KNN` has already appended into the sys.path). Or you can just store it in current folder of you program, and then import it.
+
+The script `examples.py` gives a simple code of how to use `kdtree` and `knn`.
+
 ###Usage of kdtree.py
-----
-```python
->>> import kdtree
-```
+kdtree.py is a python implementation of the 'kd tree' algorithm.
 
 ```python
+>>> import kdtree
 # the point list
 >>> point = [(2,3),(5,4),(9,6),(4,7),(8,1),(7,2)]
 
@@ -29,8 +36,6 @@ point list
 >>> print("visualize the kd-tree: ")
 >>> kdtree.visualize(root)
 visualize the kd-tree: 
-```
-
 
                        (7, 2)                  
 
@@ -38,7 +43,6 @@ visualize the kd-tree:
 
         (2, 3)     (4, 7)     (8, 1)
 
-```python
 # search for k nearest neighbors
 >>> ans = root.search_knn(point=(7,3),k=2,dist=None)
 >>> print (ans)
@@ -52,9 +56,7 @@ visualize the kd-tree:
 
 ​    
 ###Usage of knn.py
-> You can read the code in the knn.py
-
-----
+Based on kdtree algorithm, using python implemented a k-nearest neighbor algorithm.
 
 ```python
 >>> data = [((3,5),1),((2, 3), 1), ((5, 4), 1), ((9, 6), 0), ((4, 7), 1), ((8, 1), 0), ((7, 2), 1), ((8, 8), 0)]
@@ -68,8 +70,6 @@ Label prb: {0: 0.4, 1: 0.6}
 >>> print "\n\nvisualize the kd-tree: "
 >>> m.visualize_kdtree()
 visualize the kd-tree:
-```
-
 
                                            (7, 2)
 
@@ -79,8 +79,6 @@ visualize the kd-tree:
 
         (2, 3)
 
-
-```python
 # Manhattan distance
 >>> f = lambda a, b: sum( abs(a[axis]-b[axis]) for axis in range(len(a)))     
 
