@@ -21,14 +21,18 @@ ChebyshevDistance = (lambda a, b: max(
 
 
 def MinkowskiDistance(p=1):
-    # Minkowski distance
+    """
+    Minkowski distance.
+
+    Given a lambda function by value p. 
+    """
     if p == 1:
         return ManhattanDistance
     elif p == 2:
         return EuclideanDistance
-    elif p == INF:
+    elif p == float('INF'):
         return ChebyshevDistance
-    elif p == -INF:
+    elif p == float('-INF'):
         return lambda a, b: min(
             abs(a[axis] - b[axis]) for axis in range(len(a)))
     else:
