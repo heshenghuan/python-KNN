@@ -10,15 +10,8 @@ http://github.com/heshenghuan
 
 import kdtree
 import knn
+import Distance as ds
 import math
-
-dist = []
-# Manhattan distance
-dist.append(lambda a, b: sum(
-    abs(a[axis] - b[axis])**2 for axis in range(len(a))))
-# Euclidean distance
-dist.append(lambda a, b: math.sqrt(
-    sum(abs(a[axis] - b[axis])**2 for axis in range(len(a)))))
 
 
 def example_kdtree():
@@ -34,8 +27,9 @@ def example_kdtree():
     # Visualize the kdtree
     print "visualize the kd-tree: "
     kdtree.visualize(root)
-    # Search for k-nearsest neighbor
-    ans = root.search_knn(point=(7, 3), k=3, dist=dist[0])
+    # Search for k-nearsest neighbor by given p-Minkowski distance
+    f = ds.EuclideanDistance
+    ans = root.search_knn(point=(7, 3), k=10, dist=f)
     print "The 3 nearest nodes to point (7, 3) are:"
     print ans
     print "The nearest node to the point is:"
@@ -55,10 +49,11 @@ def example_knn():
     # print m.decision()
     print "\n\nvisualize the kd-tree: "
     m.visualize_kdtree()
+    f = ds.EuclideanDistance
     print "the label of point", (9, 9), "is",
-    print m.classify(point=(9, 9), k=3, dist=None)
+    print m.classify(point=(9, 9), k=3, dist=f)
     print "the label of point", (2, 8), "is",
-    print m.classify(point=(2, 8), k=3, dist=dist[1], prbout=1)
+    print m.classify(point=(2, 8), k=3, dist=f, prbout=1)
     knn.saveknn(m, 'testknn.pkl')
 
     # Pickle test
