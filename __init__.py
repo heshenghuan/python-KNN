@@ -7,4 +7,4 @@ Created on 17:46:01 2016-10-21
 http://github.com/heshenghuan
 """
 
-__all__ = ['kdtree', 'knn']
+__all__ = ['kdtree', 'knn', 'Distance']
