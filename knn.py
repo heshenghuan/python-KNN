@@ -7,6 +7,7 @@ Created on Wed Oct 07 23:45:21 2015
 
 import kdtree
 import dill
+import copy
 from pickle import dump
 from pickle import load
 
@@ -44,7 +45,7 @@ class KNN:
         self.labels = set(self.train_label)
         self.class_prb = self._calc_train_class_prb(self.train_label)
         self.kdtree = kdtree.create(
-            self.train_data, dimensions, axis, sel_axis)
+            copy.deepcopy(train_data), dimensions, axis, sel_axis)
 
     def _calc_train_class_prb(self, labels_list=None):
         """
