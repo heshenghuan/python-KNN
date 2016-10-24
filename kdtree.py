@@ -123,7 +123,7 @@ class KDNode:
         """
         current = self
         while True:
-            check_dimensionality([point], dimensions=current.dimensions)
+            check_dimensionality(point, dimensions=current.dimensions)
 
             # Adding has hit an empty leaf-node, add here
             if current.data is None:
@@ -131,7 +131,8 @@ class KDNode:
                 return current
 
             # split on self.axis, recurse either left or right
-            if point[current.axis] < current.data[current.axis]:
+            if (point.get(current.axis, 0.) <
+                    current.data.get(current.axis, 0.)):
                 if current.left is None:
                     current.left = current.create_subnode(point)
                     return current.left
@@ -184,10 +185,10 @@ class KDNode:
             self.right = self.right._remove(point)
 
         # Recurse to subtrees
-        if point[self.axis] <= self.data[self.axis]:
+        if point.get(self.axis, 0.) <= self.data.get(self.axis, 0.):
             if self.left:
                 self.left = self.left.remove(point, node)
-        if point[self.axis] >= self.data[self.axis]:
+        if point.get(self.axis, 0.) >= self.data.get(self.axis, 0.):
             if self.right:
                 self.right = self.right.remove(point, node)
         return self
@@ -218,7 +219,7 @@ class KDNode:
         (or a different function with similar semantics).
         """
 
-        max_key = lambda child_parent: child_parent[0].data[axis]
+        max_key = lambda child_parent: child_parent[0].data.get(axis, 0.)
 
         # we don't know our parent, so we include None
         me = [(self, None)] if self else []
@@ -267,7 +268,7 @@ class KDNode:
         Returns the squared distance at the given axis between the current
         Node and the given point.
         """
-        return math.pow(self.data[axis] - point[axis], 2)
+        return math.pow(self.data.get(axis, 0.) - point.get(axis, 0.), 2)
 
     def dist(self, point):
         """
@@ -345,8 +346,8 @@ class KDNode:
             # splitting coordinate of the search point and current node is less
             # than the distance (overall coordinates) from the search point to
             # the current best.
-            nodePoint = self.data[self.axis]
-            pointPlusDist = combine(point[self.axis], bestDist)
+            nodePoint = self.data.get(self.axis, 0.)
+            pointPlusDist = combine(point.get(self.axis, 0.), bestDist)
             lineIntersects = compare(pointPlusDist, nodePoint)
 
             # If the hypersphere crosses the plane, there could be nearer
@@ -382,7 +383,8 @@ class KDNode:
 
         # go down the trees as we would for inserting
         while current:
-            if point[current.axis] < current.data[current.axis]:
+            if (point.get(current.axis, 0.) <
+                    current.data.get(current.axis, 0.)):
                 # go to left subtree
                 prev = current
                 current = current.left
@@ -424,8 +426,7 @@ class KDNode:
         return id(self)
 
 
-def create(point_list=None, dimensions=None, axis=0, sel_axis=None,
-           parent=None):
+def create(point_list, dimensions, axis=0, sel_axis=None, parent=None):
     """
     Creates a kd-tree from a list of points
 
@@ -436,7 +437,7 @@ def create(point_list=None, dimensions=None, axis=0, sel_axis=None,
 
     If both a point_list and dimensions are given, the numbers must agree.
 
-    Axis is the axis on which the root-node should split.
+    axis is the axis on which the root-node should split.
 
     sel_axis(axis) is used when creating subnodes of a node. It receives the
     axis of the parent node and returns the axis of the child node.
@@ -456,7 +457,7 @@ def create(point_list=None, dimensions=None, axis=0, sel_axis=None,
         return KDNode(sel_axis=sel_axis, axis=axis, dimensions=dimensions)
 
     # Sort point list and choose median as pivot element
-    point_list.sort(key=lambda point: point[axis])
+    point_list.sort(key=lambda point: point.get(axis, 0.))
     median = len(point_list) / 2
 
     loc = point_list[median]
@@ -469,10 +470,11 @@ def create(point_list=None, dimensions=None, axis=0, sel_axis=None,
     return root
 
 
-def check_dimensionality(point_list, dimensions=None):
-    dimensions = dimensions or len(point_list[0])
+def check_dimensionality(point_list, dimensions):
+    # The dimensions must be given
+    dimensions = dimensions  # or len(point_list[0])
     for p in point_list:
-        if len(p) != dimensions:
+        if max(p.keys()) > dimensions:
             raise ValueError(
                 'All Points in point_list must have the same dimensionality')
 

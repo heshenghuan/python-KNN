@@ -17,8 +17,8 @@ class KNN:
     some classification tasks.
     """
 
-    def __init__(self, train_data=None, dimensions=None, axis=0,
-                 sel_axis=None):
+    def __init__(self, train_data=None, train_label=None, dimensions=None,
+                 axis=0, sel_axis=None):
         """
         Creates a new KNN model contains a kdtree build by the point_list.
 
@@ -39,11 +39,12 @@ class KNN:
         """
         # As train_data is a list of samples, we use dict() to change data
         # structure of samples.
-        self.train_data = dict(train_data)
-        self.labels = set(self.train_data.values())
-        self.class_prb = self._calc_train_class_prb(self.train_data.values())
+        self.train_data = train_data
+        self.train_label = train_label
+        self.labels = set(self.train_label)
+        self.class_prb = self._calc_train_class_prb(self.train_label)
         self.kdtree = kdtree.create(
-            self.train_data.keys(), dimensions, axis, sel_axis)
+            self.train_data, dimensions, axis, sel_axis)
 
     def _calc_train_class_prb(self, labels_list=None):
         """
@@ -81,7 +82,8 @@ class KNN:
             for label in self.labels:
                 prb[label] = 0.0
             for kdnode, dist in neighbors:
-                prb[self.train_data[kdnode.data]] += 1
+                index = self.train_data.index(kdnode.data)
+                prb[self.train_label[index]] += 1
             for label in self.labels:
                 prb[label] = prb[label] / n
             return sorted(prb.items(), key=lambda n: n[1], reverse=True)
