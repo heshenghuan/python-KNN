@@ -11,20 +11,20 @@ import math
 
 # Manhattan distance
 ManhattanDistance = (lambda a, b: sum(
-    abs(a[axis] - b[axis]) for axis in range(len(a))))
+    abs(a.get(axis, 0.) - b.get(axis, 0.)) for axis in range(len(a))))
 # Euclidean distance
 EuclideanDistance = (lambda a, b: math.sqrt(
-    sum(abs(a[axis] - b[axis])**2 for axis in range(len(a)))))
+    sum(abs(a.get(axis, 0.) - b.get(axis, 0.))**2 for axis in range(len(a)))))
 # Chebyshev distance
 ChebyshevDistance = (lambda a, b: max(
-    abs(a[axis] - b[axis]) for axis in range(len(a))))
+    abs(a.get(axis, 0.) - b.get(axis, 0.)) for axis in range(len(a))))
 
 
 def MinkowskiDistance(p=1):
     """
     Minkowski distance.
 
-    Given a lambda function by value p. 
+    Given a lambda function by value p.
     """
     if p == 1:
         return ManhattanDistance
@@ -34,7 +34,7 @@ def MinkowskiDistance(p=1):
         return ChebyshevDistance
     elif p == float('-INF'):
         return lambda a, b: min(
-            abs(a[axis] - b[axis]) for axis in range(len(a)))
+            abs(a.get(axis, 0.) - b.get(axis, 0.)) for axis in range(len(a)))
     else:
-        return lambda a, b: sum(
-            abs(a[axis] - b[axis])**p for axis in range(len(a)))**(1.0 / p)
+        return lambda a, b: sum(abs(a.get(axis, 0.) - b.get(axis, 0.))**p
+                                for axis in range(len(a)))**(1.0 / p)
